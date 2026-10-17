@@ -1,0 +1,7 @@
+"The craft, in motion" section should be removed and replaced with the transition animation into the scroll animated .glb "Brayden-Spiralv2.glb" (https://files.catbox.moe/ei54l6.glb) which already should have the full scene baked in (camera included) and then once it ends use another transition to get back into the web page. The transitions you're using will be from transition.txt and it will start a transition right after "Straight Razor Shave
+Hot towel.
+Clean finish.
+Hot towel, pre-shave oil, and a traditional straight razor finish.
+
+$48" and then go into the glb scroll scene and after thats done with it's scroll cycle it will go into a transition to get back into the web page.
+

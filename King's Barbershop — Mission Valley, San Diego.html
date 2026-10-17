@@ -33,7 +33,7 @@ section{position:relative;width:100%;min-height:100vh;display:flex;flex-directio
 .hero-title .line{overflow:hidden;display:block;padding-bottom:0.08em;}
 .hero-title .line span{display:inline-block;transform:translateY(110%);}
 .hero-sub{margin-top:36px;font-size:17px;color:var(--text-muted);max-width:520px;line-height:1.6;opacity:0;}
-.hero-scroll-cue{position:absolute;bottom:calc(var(--base)*8);left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;font-size:11px;letter-spacing:0.2em;}
+.hero-scroll-cue{position:absolute;bottom:calc(var(--base)*8);left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;font-size:11px;letter-spacing:0.2em}
 .cue-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--accent),transparent);animation:cuepulse 2s ease-in-out infinite;}
 @keyframes cuepulse{0%,100%{opacity:.3;}50%{opacity:1;}}
 .story{justify-content:space-between;flex-direction:row;gap:calc(var(--base)*8);align-items:center;}
@@ -108,7 +108,7 @@ footer{background:var(--accent);color:#1a0a02;padding:calc(var(--base)*12) calc(
 .story-index{position:static;display:block;margin-bottom:18px;}
 @media (max-width:900px){
   .story{height:240vh;}
-  .story-text,.story.reverse .story-text{left:6vw;right:6vw;width:auto;top:auto;bottom:0;justify-content:flex-end;text-align:left;padding:30vh 0 6vh;background:linear-gradient(to top,rgba(0,0,0,.6),transparent);} 
+  .story-text,.story.reverse .story-text{left:6vw;right:6vw;width:auto;top:auto;bottom:0;justify-content:flex-end;text-align:left;padding:30vh 0 6vh;background:linear-gradient(to top,rgba(0,0,0,0.6),transparent);} 
   .story-title{font-size:clamp(30px,8vw,44px);margin-bottom:12px;}
   .story-body{font-size:15px;margin:0;}
   .story-price{margin-top:14px;font-size:32px;}
@@ -273,4 +273,114 @@ footer{background:var(--accent);color:#1a0a02;padding:calc(var(--base)*12) calc(
     <div class="footer-top">
       <div class="footer-brand">King's Barbershop — modern cuts, old-world craft.</div>
       <div class="footer-cols">
-        <div class="footer-col"><h4>Visit</h4><a href="javascript:void(0)">Sola Salons</a><a href="javascript:void(0)">Mission Valley, San Diego, CA</a><a href="https://www.instagram.com/kings_ba[...]
+        <div class="footer-col"><h4>Visit</h4><a href="javascript:void(0)">Sola Salons</a><a href="javascript:void(0)">Mission Valley, San Diego, CA</a><a href="https://www.instagram.com/kings_ba">Instagram</a></div>
+        <div class="footer-col"><h4>Connect</h4><a href="https://www.instagram.com/kings_barbershop_sd/" target="_blank" rel="noopener">Instagram @kings_barbershop_sd</a></div>
+      </div>
+    </div>
+    <div class="footer-bottom"><span>© 2026 King's Barbershop. All rights reserved.</span><span>Barber: Brayden King · Crafted for Mission Valley.</span></div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+<!-- Loader coordination script: do NOT hide on window.load fallback. Instead wait for image assets + GLTF model load events. -->
+<script>
+(function(){
+  const loader = document.getElementById('loader');
+  const loaderFill = document.getElementById('loaderFill');
+  const loaderPct = document.getElementById('loaderPct');
+  let imgTotal = 0, imgLoaded = 0;
+  let modelLoaded = false;
+  let assetsTimeout;
+
+  function setProgress(pct){
+    if(loaderFill) loaderFill.style.width = pct + '%';
+    if(loaderPct) loaderPct.textContent = pct + '%';
+  }
+
+  function updateProgress(){
+    // Images count for up to 60% of progress, model represents remaining 40% until loaded
+    const imgProgress = imgTotal ? (imgLoaded / imgTotal) : 1;
+    const modelProgress = modelLoaded ? 1 : 0;
+    const total = Math.round((imgProgress * 60) + (modelProgress * 40));
+    setProgress(Math.min(100, total));
+  }
+
+  function hideLoader(){
+    if(!loader) return;
+    loader.style.transition = 'opacity .6s ease, visibility .01s linear .6s';
+    loader.style.opacity = '0';
+    setTimeout(()=>{ loader.style.display = 'none'; },700);
+  }
+
+  function checkDone(){
+    if(modelLoaded && (imgTotal === 0 || imgLoaded >= imgTotal)){
+      updateProgress();
+      hideLoader();
+      clearTimeout(assetsTimeout);
+    }
+  }
+
+  // Ensure loader is visible and set initial progress
+  if(loader){ loader.style.display = 'flex'; loader.style.opacity = '1'; }
+  setProgress(0);
+
+  // Track images on page (conservative: only images with src)
+  const imgs = Array.from(document.querySelectorAll('img[src]'));
+  imgTotal = imgs.length;
+  if(imgTotal === 0) imgLoaded = 0;
+  imgs.forEach(img => {
+    if(img.complete){ imgLoaded++; updateProgress(); checkDone(); return; }
+    img.addEventListener('load', ()=>{ imgLoaded++; updateProgress(); checkDone(); });
+    img.addEventListener('error', ()=>{ imgLoaded++; updateProgress(); checkDone(); });
+  });
+
+  // Wrap GLTFLoader.prototype.load if present to detect model load
+  function wrapGLTFLoader(){
+    try{
+      const GLTF = (window.THREE && window.THREE.GLTFLoader) ? window.THREE.GLTFLoader : window.GLTFLoader;
+      if(GLTF && GLTF.prototype && !GLTF.prototype.__loaderWrapped){
+        const proto = GLTF.prototype;
+        const orig = proto.load;
+        proto.load = function(url,onLoad,onProgress,onError){
+          const wrappedOnLoad = function(gltf){
+            modelLoaded = true;
+            updateProgress();
+            if(typeof onLoad === 'function') onLoad(gltf);
+            checkDone();
+          };
+          return orig.call(this,url,wrappedOnLoad,onProgress,onError);
+        };
+        proto.__loaderWrapped = true;
+      }
+    }catch(e){
+      // ignore
+    }
+  }
+
+  // Try to wrap now, and again shortly in case libs load later
+  wrapGLTFLoader();
+  setTimeout(wrapGLTFLoader, 500);
+  setTimeout(wrapGLTFLoader, 1500);
+
+  // Failsafe: if nothing completes within 12s, force hide to avoid stuck loader
+  assetsTimeout = setTimeout(()=>{
+    // complete visually then hide
+    setProgress(100);
+    hideLoader();
+  }, 12000);
+
+  // If no GLTFLoader is used and images finish, hide loader
+  if(imgTotal > 0 && imgLoaded >= imgTotal && !(window.THREE && (window.THREE.GLTFLoader || window.GLTFLoader))){
+    setTimeout(()=>{ setProgress(100); hideLoader(); }, 300);
+  }
+})();
+</script>
+
+</body>
+</html>
